@@ -31,3 +31,5 @@ transitive dependencies), you can make informed decisions about whether a certai
 ## Installation
 
 ## Development & Contributing
+
+Work done on this plugin follows decisions and principles documented [here](./DECISIONS.md).
