@@ -28,8 +28,19 @@ dependency hell is a thing.
 __This plugin attacks this problem from the angle of awareness -- by surfacing what's being installed (including
 transitive dependencies), you can make informed decisions about whether a certain package is worth it or not.__
 
+## Disclaimer
+
+Until this is released as `1.x`, consider every release as potentially-breaking. Consult the release notes for more
+details.
+
 ## Installation
+
+```sh
+yarn plugin import <link to your chosen release>
+```
 
 ## Development & Contributing
 
 Work done on this plugin follows decisions and principles documented [here](./DECISIONS.md).
+
+Feel free to open a PR or an issue if you'd like to submit improvements! Anything sent up will be processed as soon as possible.
