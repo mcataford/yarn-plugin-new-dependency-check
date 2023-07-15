@@ -1,0 +1,20 @@
+{
+  "name": "plugin-new-dependency-check",
+  "version": "0.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "packageManager": "yarn@3.6.1",
+  "files": [
+    "./index.js"
+  ],
+  "scripts": {
+    "lint": "yarn rome format *.js && yarn rome check *.js",
+    "lint:fix": "yarn rome format *.js --write && yarn rome check *.js --apply",
+    "lint:fix-more": "yarn rome format *.js --write && yarn rome check *.js --apply-unsafe",
+    "test": "yarn build && yarn node --test",
+    "build": "yarn pack"
+  },
+  "devDependencies": {
+    "rome": "^12.1.3"
+  }
+}
