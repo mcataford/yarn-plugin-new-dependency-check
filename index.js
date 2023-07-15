@@ -1,8 +1,25 @@
-function getDependencyCountMessage(descriptorsLength) {
-	return process.env.NO_COLOR
+function getPrompt(descriptorsLength) {
+	const dependencyCount = process.env.NO_COLOR
 		? `About to install ${descriptorsLength} new packages.\n`
 		: `About to install \x1b[1;34m${descriptorsLength}\x1b[1;0m new packages.\n`
+
+	const question = process.env.NO_COLOR
+		? 'Continue? (Y/Yes to continue, anything else to cancel): '
+		: 'Continue? (\x1b[1;34mY/Yes to continue\x1b[1;0m, anything else to cancel): '
+
+	const dependencyInfo =
+		'The dependency count includes any package being installed as part of the dependency tree of the packages you are adding directly.'
+
+	return `${'='.repeat(10)}
+    ${dependencyCount}
+    ${dependencyInfo}
+${'='.repeat(10)}
+${question}`
 }
+
+const CANCELLATION_MESSAGE = process.env.NO_COLOR
+	? 'Action cancelled by user; no new packages installed.'
+	: '\x1b[1;31mAction cancelled by user\x1b[1;0m; no new packages installed.'
 
 module.exports = {
 	name: 'plugin-new-dependency-check',
@@ -24,6 +41,7 @@ module.exports = {
 					const currentDescriptors = workspace.project.storedDescriptors
 
 					await workspace.project.resolveEverything({
+						// FIXME: Will fail when used with unpublished tarballs.
 						lockfileOnly: false,
 						// TODO: Reporting boilerplate.
 						report: new ThrowReport(),
@@ -40,18 +58,17 @@ module.exports = {
 						newDescriptors.push(descriptor.name)
 					}
 
-					process.stdout.write(getDependencyCountMessage(newDescriptors.length))
-
-					// FIXME: Messy.
 					const rl = readline.createInterface({
 						input: process.stdin,
 						output: process.stdout,
 					})
-					const ask = (q) => new Promise((resolve) => rl.question(q, resolve))
-					const ans = await ask('Continue? (Y/Yes to continue, anything else to cancel)s')
+
+					const userInput = await new Promise((resolve) => rl.question(getPrompt(newDescriptors.length), resolve))
+
 					rl.close()
-					if (!['Y', 'Yes'].includes(ans)) {
-						process.stdout.write('Cancelled!\n')
+
+					if (!['Y', 'Yes'].includes(userInput)) {
+						process.stdout.write(`${CANCELLATION_MESSAGE}\n`)
 						process.exit(1)
 					}
 				},
