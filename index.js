@@ -27,16 +27,21 @@ const CANCELLATION_MESSAGE = isNoColourMode()
 	? 'Action cancelled by user; no new packages installed.'
 	: '\x1b[1;31mAction cancelled by user\x1b[1;0m; no new packages installed.'
 
+const RESOLVE_MESSAGE =
+	'📦 Resolving direct and transitive dependencies being added...\nThis may take longer if the packages added have a lot of dependencies.'
+const UNKNOWN_ERROR_MESSAGE =
+	'🤔 Failed to match some dependencies while mapping new packages, results may be inaccurate.'
 /*
  *  Builds a collection of new dependencies based on resolved packages and known added
  *  package names.
  *
  *  Returns a single collection containing the flattened dependency subtrees rooted
- *  at each of the added packages.
+ *  at each of the added packages. This contains the direct and transitive dependencies
+ *  touched by `yarn add`.
  *
- *  @param {Map<LocatorHash, Locator>} packageLocators Stored locators from the Yarn Project.
- *  @param {Map<DescriptorHash, Descriptor>} packageDescriptors Stored descriptors from the Yarn Project.
- *  @param {Array<string>} addedDescriptorHashes Top-level package descriptor hashes being added.
+ *  @param {Map<LocatorHash, Locator>} storedPackages Stored Package map from the Yarn Project.
+ *  @param {Map<DescriptorHash, Descriptor>} packageDescriptors Stored descriptors map from the Yarn Project.
+ *  @param {Array<string>} addedIdentHashes Top-level package identity hashes being added.
  */
 function determineNewDependencies(storedPackages, packageDescriptors, addedIdentHashes) {
 	const packagesByIdentHash = new Map()
@@ -52,6 +57,11 @@ function determineNewDependencies(storedPackages, packageDescriptors, addedIdent
 	while (identHashStack.length > 0) {
 		const addedHash = identHashStack.pop()
 		const addedPackage = packagesByIdentHash.get(addedHash)
+
+		if (!addedPackage) {
+			process.stdout.write(`${UNKNOWN_ERROR_MESSAGE}\n`)
+			continue
+		}
 
 		// Multiple packages may depend on the same package. We only
 		// track it once.
@@ -89,18 +99,13 @@ module.exports = {
 				 */
 				async afterWorkspaceDependencyAddition(workspace, target, descriptor, strategies) {
 					/*
-					 * To determine how many additional packages will be installed, we compare
-					 * the stored descriptors before and after resolving everything via `resolveEverything`.
-					 *
-					 * The difference of descriptor maps should reveal which have been added (which would be
-					 * added packages).
-					 */
-
-					/*
 					 * This hook is executed for each added dependency such that
 					 * `yarn add A B C` will call it thrice. To avoid this, we can
 					 * parse the command-line arguments to determine what the user is
 					 * trying to add.
+					 *
+					 * Because the hook is run multiple times, we cache the result of the
+					 * arg analysis to avoid redoing it each time.
 					 */
 					state.addedTopLevelPackages =
 						state.addedTopLevelPackages ||
@@ -123,6 +128,8 @@ module.exports = {
 					if (state.addedTopLevelPackages[state.addedTopLevelPackages.length - 1] !== descriptor.name) {
 						return
 					}
+
+					process.stdout.write(`${RESOLVE_MESSAGE}\n`)
 
 					await workspace.project.resolveEverything({
 						// FIXME: Will fail when used with unpublished tarballs.
