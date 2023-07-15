@@ -35,7 +35,7 @@ module.exports = {
 					}
 
 					process.stdout.write(
-						`About to install \x1b[1;31m${newDescriptors.length}\x1b[0m new packages.\nThis number includes the packages you are installing directly along with all their transitive dependencies.\n`,
+						`About to install ${newDescriptors.length} new packages.\nThis number includes the packages you are installing directly along with all their transitive dependencies.\n`,
 					)
 
 					// FIXME: Messy.
@@ -46,7 +46,10 @@ module.exports = {
 					const ask = (q) => new Promise((resolve) => rl.question(q, resolve))
 					const ans = await ask('Continue? (Y/Yes to continue, anything else to cancel)')
 					rl.close()
-					if (!['Y', 'Yes'].includes(ans)) throw new Error('User cancelled.')
+					if (!['Y', 'Yes'].includes(ans)) {
+						process.stdout.write('Cancelled!\n')
+						process.exit(1)
+					}
 				},
 			},
 		}
