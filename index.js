@@ -1,7 +1,8 @@
-const getDependencyCountMessage = (descriptorsLength) =>
-	process.env.NO_COLOR
+function getDependencyCountMessage(descriptorsLength) {
+	return process.env.NO_COLOR
 		? `About to install ${descriptorsLength} new packages.\n`
 		: `About to install \x1b[1;34m${descriptorsLength}\x1b[1;0m new packages.\n`
+}
 
 module.exports = {
 	name: 'plugin-new-dependency-check',
