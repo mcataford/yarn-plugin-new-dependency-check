@@ -1,9 +1,15 @@
+function isNoColourMode() {
+	if (typeof process === 'undefined') return false
+
+	return Boolean(process.env.NO_COLOR)
+}
+
 function getPrompt(descriptorsLength) {
-	const dependencyCount = process.env.NO_COLOR
+	const dependencyCount = isNoColourMode()
 		? `About to install ${descriptorsLength} new packages.\n`
 		: `About to install \x1b[1;34m${descriptorsLength}\x1b[1;0m new packages.\n`
 
-	const question = process.env.NO_COLOR
+	const question = isNoColourMode()
 		? 'Continue? (Y/Yes to continue, anything else to cancel): '
 		: 'Continue? (\x1b[1;34mY/Yes to continue\x1b[1;0m, anything else to cancel): '
 
@@ -17,7 +23,7 @@ ${'='.repeat(10)}
 ${question}`
 }
 
-const CANCELLATION_MESSAGE = process.env.NO_COLOR
+const CANCELLATION_MESSAGE = isNoColourMode()
 	? 'Action cancelled by user; no new packages installed.'
 	: '\x1b[1;31mAction cancelled by user\x1b[1;0m; no new packages installed.'
 
