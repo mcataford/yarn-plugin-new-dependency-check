@@ -1,3 +1,8 @@
+const getDependencyCountMessage = (descriptorsLength) =>
+	process.env.NO_COLOR
+		? `About to install ${descriptorsLength} new packages.\n`
+		: `About to install \x1b[1;34m${descriptorsLength}\x1b[1;0m new packages.\n`
+
 module.exports = {
 	name: 'plugin-new-dependency-check',
 	factory: (require) => {
@@ -34,9 +39,7 @@ module.exports = {
 						newDescriptors.push(descriptor.name)
 					}
 
-					process.stdout.write(
-						`About to install ${newDescriptors.length} new packages.\nThis number includes the packages you are installing directly along with all their transitive dependencies.\n`,
-					)
+					process.stdout.write(getDependencyCountMessage(newDescriptors.length))
 
 					// FIXME: Messy.
 					const rl = readline.createInterface({
@@ -44,7 +47,7 @@ module.exports = {
 						output: process.stdout,
 					})
 					const ask = (q) => new Promise((resolve) => rl.question(q, resolve))
-					const ans = await ask('Continue? (Y/Yes to continue, anything else to cancel)')
+					const ans = await ask('Continue? (Y/Yes to continue, anything else to cancel)s')
 					rl.close()
 					if (!['Y', 'Yes'].includes(ans)) {
 						process.stdout.write('Cancelled!\n')
