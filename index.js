@@ -109,16 +109,22 @@ module.exports = {
 					 */
 					state.addedTopLevelPackages =
 						state.addedTopLevelPackages ||
-						process.argv.filter((arg, position) => {
-							// The first three arguments are the node and yarn runtime paths, and
-							// the add command.
-							if (position < 3) return false
+						process.argv
+							.filter((arg, position) => {
+								// The first three arguments are the node and yarn runtime paths, and
+								// the add command.
+								if (position < 3) return false
 
-							// Flags passed to `yarn add` are ignored.
-							if (arg.startsWith('-')) return false
+								// Flags passed to `yarn add` are ignored.
+								if (arg.startsWith('-')) return false
 
-							return true
-						})
+								return true
+							})
+							.map((packageName) => {
+								// Package names can be of the format `package@version`, in which case we only consider
+								// the name.
+								return packageName.split('@')[0]
+							})
 
 					// Keeping track of descriptor hashes added directly speeds up the work
 					// of building the dependency trees later.
