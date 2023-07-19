@@ -1,7 +1,7 @@
 const { describe, test } = require('node:test')
 const assert = require('node:assert')
 const { promises: fs } = require('node:fs')
-const { exec, spawn } = require('node:child_process')
+const { exec, spawn, execSync } = require('node:child_process')
 const path = require('node:path')
 
 /*
@@ -21,8 +21,8 @@ async function withTestPackage(testFunction) {
 		await fs.copyFile('.yarnrc.yml', path.join(testDirectory, '.yarnrc.yml'))
 		await fs.writeFile(path.join(testDirectory, 'yarn.lock'), '')
 
-		await exec('corepack enable', { cwd: testDirectory })
-		await exec('yarn', { cwd: testDirectory })
+		execSync('corepack enable', { cwd: testDirectory })
+		execSync('yarn', { cwd: testDirectory, encoding: 'utf8' })
 
 		await testFunction({ cwd: testDirectory })
 		await fs.rm(testDirectory, { recursive: true })

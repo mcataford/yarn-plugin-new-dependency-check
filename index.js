@@ -35,46 +35,39 @@ const UNKNOWN_ERROR_MESSAGE =
 	'🤔 Failed to match some dependencies while mapping new packages, results may be inaccurate.'
 
 /*
- *  Builds a collection of new dependencies based on resolved packages and known added
- *  package names.
+ *  Collects new dependencies added by resolving the project based on the lockfile, then
+ *  using the lockfile and the network, and comparing the two.
  *
- *  Returns a single collection containing the flattened dependency subtrees rooted
- *  at each of the added packages. This contains the direct and transitive dependencies
- *  touched by `yarn add`.
+ *  Returns a list containing the list of packages + versions added.
+ *  This contains the direct and transitive dependencies touched by `yarn add`.
  *
- *  @param {Map<LocatorHash, Locator>} storedPackages Stored Package map from the Yarn Project.
- *  @param {Map<DescriptorHash, Descriptor>} packageDescriptors Stored descriptors map from the Yarn Project.
- *  @param {Array<string>} addedIdentHashes Top-level package identity hashes being added.
+ *  @param {Project} Yarn project.
+ *  @param {Report} Report object from Yarn.
  */
-function determineNewDependencies(storedPackages, packageDescriptors, addedIdentHashes) {
-	const packagesByIdentHash = new Map()
+async function determineNewDependencies(project, report) {
+	await project.resolveEverything({
+		// FIXME: Will fail when used with unpublished tarballs.
+		lockfileOnly: true,
+		// TODO: Reporting boilerplate.
+		report,
+	})
 
-	for (const storedPackage of storedPackages.values()) {
-		packagesByIdentHash.set(storedPackage.identHash, storedPackage)
-	}
+	const beforePackageLocators = new Set([...project.storedPackages.keys()])
 
-	const addedPackagesMap = new Map()
+	await project.resolveEverything({
+		// FIXME: Will fail when used with unpublished tarballs.
+		lockfileOnly: false,
+		// TODO: Reporting boilerplate.
+		report,
+	})
 
-	const identHashStack = [...addedIdentHashes]
-
-	while (identHashStack.length > 0) {
-		const addedHash = identHashStack.pop()
-		const addedPackage = packagesByIdentHash.get(addedHash)
-
-		if (!addedPackage) {
-			process.stdout.write(`${UNKNOWN_ERROR_MESSAGE}\n`)
-			continue
-		}
-
-		// Multiple packages may depend on the same package. We only
-		// track it once.
-		if (!addedPackagesMap.has(addedHash)) {
-			addedPackagesMap.set(addedHash, addedPackage)
-			identHashStack.push(...addedPackage.dependencies.keys())
-		}
-	}
-
-	return addedPackagesMap
+	return [...project.storedPackages.entries()]
+		.filter(([key]) => {
+			return !beforePackageLocators.has(key)
+		})
+		.map(([, packageData]) => {
+			return `${packageData.name}@${packageData.version}`
+		})
 }
 
 module.exports = {
@@ -102,38 +95,14 @@ module.exports = {
 
 					process.stdout.write(`${RESOLVE_MESSAGE}\n`)
 
-					await workspace.project.resolveEverything({
-						// FIXME: Will fail when used with unpublished tarballs.
-						lockfileOnly: true,
-						// TODO: Reporting boilerplate.
-						report: new ThrowReport(),
-					})
-
-					const beforePackageLocators = new Set([...workspace.project.storedPackages.keys()])
-
-					await workspace.project.resolveEverything({
-						// FIXME: Will fail when used with unpublished tarballs.
-						lockfileOnly: false,
-						// TODO: Reporting boilerplate.
-						report: new ThrowReport(),
-					})
-
-					const newDependencies = [...workspace.project.storedPackages.entries()]
-						.filter(([key]) => {
-							return !beforePackageLocators.has(key)
-						})
-						.map(([, packageData]) => {
-							return `${packageData.name}@${packageData.version}`
-						})
-
-					addedPackages = newDependencies
+					addedPackages = await determineNewDependencies(workspace.project, new ThrowReport())
 
 					const rl = readline.createInterface({
 						input: process.stdin,
 						output: process.stdout,
 					})
 
-					const userInput = await new Promise((resolve) => rl.question(getPrompt(newDependencies), resolve))
+					const userInput = await new Promise((resolve) => rl.question(getPrompt(addedPackages), resolve))
 
 					rl.close()
 
