@@ -14,15 +14,15 @@ const path = require('node:path')
  */
 async function withTestPackage(testFunction) {
 	const testDirectory = await fs.mkdtemp('test-')
-
+	const defaultExecArgs = { cwd: testDirectory, encoding: 'utf8' }
 	try {
 		await fs.writeFile(path.join(testDirectory, 'package.json'), JSON.stringify({ packageManager: 'yarn@3.6.1' }))
 		await fs.copyFile('index.js', path.join(testDirectory, 'index.js'))
 		await fs.copyFile('.yarnrc.yml', path.join(testDirectory, '.yarnrc.yml'))
 		await fs.writeFile(path.join(testDirectory, 'yarn.lock'), '')
 
-		execSync('corepack enable', { cwd: testDirectory })
-		execSync('yarn', { cwd: testDirectory, encoding: 'utf8' })
+		execSync('corepack enable', defaultExecArgs)
+		execSync('yarn', defaultExecArgs)
 
 		await testFunction({ cwd: testDirectory })
 		await fs.rm(testDirectory, { recursive: true })
