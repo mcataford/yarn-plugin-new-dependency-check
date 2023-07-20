@@ -24,7 +24,7 @@ jobs:
         cache-name: dependencies-cache
       with:
         path: .yarn
-        key: ${{ runner.os }}-build-${{env.cache-name}}-${{ hashFiles('**/yarn.lock') }}-node-${{ matrix.node-version }}
+        key: ${{ runner.os }}-build-${{env.cache-name}}-${{ hashFiles('./yarn.lock') }}-node-${{ matrix.node-version }}
     - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
       run: |
         corepack enable
@@ -45,7 +45,7 @@ jobs:
         cache-name: dependencies-cache
       with:
         path: .yarn
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}-node-18
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('./yarn.lock') }}-node-18
     - run: |
         corepack enable  
         yarn
@@ -70,13 +70,11 @@ jobs:
         cache-name: dependencies-cache
       with:
         path: .yarn
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}-node-${{ matrix.node-version }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('./yarn.lock') }}-node-${{ matrix.node-version }}
     - run: |
         corepack enable
         yarn
         yarn test
-      env:
-        NO_COLOR: 1
   
   build:
     runs-on: ubuntu-latest
@@ -94,7 +92,7 @@ jobs:
         cache-name: dependencies-cache
       with:
         path: .yarn
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}-node-${{ matrix.node-version }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('./yarn.lock') }}-node-${{ matrix.node-version }}
     - run: |
         corepack enable
         yarn
