@@ -75,8 +75,6 @@ jobs:
         corepack enable
         yarn
         yarn test
-      env:
-        NO_COLOR: 1
   
   build:
     runs-on: ubuntu-latest

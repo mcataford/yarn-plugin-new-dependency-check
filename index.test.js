@@ -1,8 +1,12 @@
+const util = require('node:util')
 const { describe, test } = require('node:test')
 const assert = require('node:assert')
 const { promises: fs } = require('node:fs')
-const { exec, spawn, execSync } = require('node:child_process')
+const { exec, spawn } = require('node:child_process')
 const path = require('node:path')
+const { tmpdir } = require('node:os')
+
+const execWait = util.promisify(exec)
 
 /*
  * `withTestPackage` sets up a temporary directory containing
@@ -13,16 +17,16 @@ const path = require('node:path')
  * of cleaning up so that no cruft is left behind test runs.
  */
 async function withTestPackage(testFunction) {
-	const testDirectory = await fs.mkdtemp('test-')
+	const testDirectory = await fs.mkdtemp(path.join(tmpdir(), 'test-'))
 	const defaultExecArgs = { cwd: testDirectory, encoding: 'utf8' }
 	try {
 		await fs.writeFile(path.join(testDirectory, 'package.json'), JSON.stringify({ packageManager: 'yarn@3.6.1' }))
 		await fs.copyFile('index.js', path.join(testDirectory, 'index.js'))
 		await fs.copyFile('.yarnrc.yml', path.join(testDirectory, '.yarnrc.yml'))
-		await fs.writeFile(path.join(testDirectory, 'yarn.lock'), '')
 
-		execSync('corepack enable', defaultExecArgs)
-		execSync('yarn', defaultExecArgs)
+		await execWait('corepack enable', defaultExecArgs)
+		// This explicitly creates a yarn.lock, hence the non-immutable mode.
+		await execWait('yarn install --no-immutable', defaultExecArgs)
 
 		await testFunction({ cwd: testDirectory })
 		await fs.rm(testDirectory, { recursive: true })
