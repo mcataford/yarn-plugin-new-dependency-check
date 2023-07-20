@@ -14,7 +14,7 @@ function getPrompt(packagesToInstall) {
 		: 'Continue? (\x1b[1;34mY/Yes to continue\x1b[1;0m, anything else to cancel): '
 
 	const dependencyInfo =
-		'The dependency count includes any package being installed as part of the dependency tree of the packages you are adding directly.'
+		'The dependency count includes any package being installed as part of the dependency tree of the packages you are adding directly.\n'
 
 	return `${'='.repeat(10)}
     ${dependencyCount}
