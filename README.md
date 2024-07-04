@@ -1,6 +1,10 @@
 # yarn-plugin-new-dependency-check
 📦 Never accidentally pull in a billion new dependencies again.
 
+> # ✈️ Moved away!
+>
+> This project has moved away from Github and is now hosted [elsewhere](https://forge.karnov.club/marc/yarn-plugin-new-dependency-check).
+
 ## Thoughts
 
 One of the things I've come to love about how Linux prompts users when installing dependencies is that it makes it
